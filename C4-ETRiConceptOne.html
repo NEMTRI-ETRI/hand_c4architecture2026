@@ -1,0 +1,2383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bionic Prosthetic Arm - Architecture Visualization</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0a0a0f;
+            color: #e0e0ff;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 2000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #2a2a3a;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #4d7fff, #00d4aa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #a0a0c0;
+            font-size: 1.1rem;
+        }
+
+        /* Entity Selector */
+        .entity-selector {
+            margin: 30px auto;
+            max-width: 800px;
+            padding: 20px;
+            background: #12121d;
+            border-radius: 16px;
+            border: 1px solid #2a2a3a;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .entity-selector-title {
+            text-align: center;
+            font-size: 1.2rem;
+            margin-bottom: 25px;
+            color: #e0e0ff;
+        }
+
+        .entity-options {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .entity-option {
+            flex: 1;
+            min-width: 250px;
+            max-width: 350px;
+        }
+
+        .entity-btn {
+            width: 100%;
+            padding: 25px 20px;
+            background: linear-gradient(145deg, #1a1a2e, #23233a);
+            border: 2px solid #2a2a3a;
+            border-radius: 12px;
+            color: #e0e0ff;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .entity-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+            border-color: #4d7fff;
+        }
+
+        .entity-btn.active {
+            background: linear-gradient(145deg, #2a3a5e, #1e2a4d);
+            border-color: #4d7fff;
+            box-shadow: 0 0 20px rgba(77, 127, 255, 0.3);
+        }
+
+        .entity-icon {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .entity-description {
+            font-size: 0.9rem;
+            color: #a0a0c0;
+            margin-top: 10px;
+            line-height: 1.5;
+        }
+
+        /* Navigation Tree - Enhanced Horizontal */
+        .navigation-tree {
+            margin-bottom: 30px;
+            padding: 30px;
+            max-width: 100%;
+            margin: 30px auto;
+            background: #12121d;
+            border-radius: 16px;
+            border: 1px solid #2a2a3a;
+            overflow-x: auto;
+            min-height: 280px;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            display: none;
+        }
+
+        .navigation-tree.active {
+            display: block;
+        }
+
+        .tree-horizontal {
+            display: flex;
+            min-height: 220px;
+            align-items: flex-start;
+            padding: 30px 0;
+            position: relative;
+            z-index: 2;
+        }
+
+        .tree-level {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            min-width: 300px;
+            position: relative;
+        }
+
+        .tree-level-title {
+            font-size: 14px;
+            color: #a0a0c0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            padding-left: 15px;
+            border-left: 4px solid;
+            font-weight: 600;
+        }
+
+        .tree-level:nth-child(1) .tree-level-title { border-color: #ffffff; }
+        .tree-level:nth-child(2) .tree-level-title { border-color: #4d7fff; }
+        .tree-level:nth-child(3) .tree-level-title { border-color: #0dcaf0; }
+        .tree-level:nth-child(4) .tree-level-title { border-color: #00d4aa; }
+        .tree-level:nth-child(5) .tree-level-title { border-color: #ff6b6b; }
+
+        .tree-node {
+            position: relative;
+            padding-left: 25px;
+        }
+
+        .node-content {
+            background: linear-gradient(145deg, #1a1a2e, #23233a);
+            border: 2px solid;
+            border-radius: 10px;
+            padding: 16px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 280px;
+            position: relative;
+            z-index: 2;
+            backdrop-filter: blur(10px);
+        }
+
+        .node-content.non-clickable {
+            cursor: default;
+        }
+
+        .node-content:hover:not(.non-clickable) {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+        }
+
+        .node-content.active {
+            background: linear-gradient(145deg, #2a3a5e, #1e2a4d);
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(77, 127, 255, 0.3);
+        }
+
+        .node-content.active-parent {
+            background: linear-gradient(145deg, #2a2a4e, #23234a);
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 0 15px rgba(77, 127, 255, 0.2);
+        }
+
+        /* Node types colors */
+        .node-content[data-type="entity"] { 
+            border-color: #ffffff;
+            border-left: 6px solid #ffffff;
+        }
+        .node-content[data-type="subsystem"] { 
+            border-color: #4d7fff;
+            border-left: 6px solid #4d7fff;
+        }
+        .node-content[data-type="container"] { 
+            border-color: #0dcaf0;
+            border-left: 6px solid #0dcaf0;
+        }
+        .node-content[data-type="component"] { 
+            border-color: #00d4aa;
+            border-left: 6px solid #00d4aa;
+        }
+        .node-content[data-type="tech-stack"] { 
+            border-color: #ff6b6b;
+            border-left: 6px solid #ff6b6b;
+        }
+
+        .node-title {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .node-title .icon {
+            font-size: 18px;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+        }
+
+        .node-subtitle {
+            font-size: 12px;
+            color: #a0a0c0;
+            line-height: 1.5;
+            opacity: 0.9;
+        }
+
+        .tree-connections-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .tree-connection {
+            fill: none;
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-dasharray: 0;
+            opacity: 0.6;
+        }
+
+        /* Architecture Container - Enhanced */
+        .architecture-container {
+            position: relative;
+            min-height: 1100px;
+            background: #12121d;
+            border-radius: 16px;
+            border: 1px solid #2a2a3a;
+            overflow: hidden;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            display: none;
+        }
+
+        .architecture-container.active {
+            display: block;
+        }
+
+        /* Layers Container */
+        .layers-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.4s ease;
+        }
+
+        .layer {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            padding: 50px;
+            transition: all 0.4s ease;
+            transform-origin: center;
+        }
+
+        .layer.hidden {
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(0.9);
+            pointer-events: none;
+        }
+
+        .layer.active {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1);
+            pointer-events: all;
+        }
+
+        .layer-header {
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .layer-title {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #4d7fff, #00d4aa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .layer-subtitle {
+            color: #a0a0c0;
+            font-size: 1.1rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* Components Grid - Enhanced */
+        .components-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 35px;
+            padding: 30px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .component {
+            background: linear-gradient(145deg, #1e1e2e, #25253a);
+            border-radius: 12px;
+            padding: 30px;
+            border: 2px solid;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            min-height: 250px;
+            z-index: 2;
+            backdrop-filter: blur(10px);
+        }
+
+        .component:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .component.layer-1 { 
+            border-color: #4d7fff;
+            border-left: 6px solid #4d7fff;
+        }
+        .component.layer-2 { 
+            border-color: #0dcaf0;
+            border-left: 6px solid #0dcaf0;
+        }
+        .component.layer-3 { 
+            border-color: #00d4aa;
+            border-left: 6px solid #00d4aa;
+        }
+        .component.layer-4 { 
+            border-color: #ff6b6b;
+            border-left: 6px solid #ff6b6b;
+        }
+
+        .component-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .component-icon {
+            font-size: 36px;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            flex-shrink: 0;
+        }
+
+        .component-title-section {
+            flex: 1;
+        }
+
+        .component-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .component-layer-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: currentColor;
+            color: white;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .component-description {
+            color: #b0b0d0;
+            margin-bottom: 20px;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .component-features {
+            margin-top: 20px;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: #a0a0c0;
+        }
+
+        .feature-item:before {
+            content: "▸";
+            color: #4d7fff;
+            flex-shrink: 0;
+        }
+
+        /* Connections SVG */
+        .layer-connections-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .layer-connection {
+            fill: none;
+            stroke-width: 2.5;
+            stroke-linecap: round;
+            marker-end: url(#arrowhead);
+            transition: all 0.3s ease;
+            stroke-dasharray: 5, 3;
+        }
+
+        /* Legend */
+        .legend {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            background: rgba(18, 18, 29, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid #2a2a3a;
+            border-radius: 10px;
+            padding: 20px;
+            z-index: 100;
+            min-width: 200px;
+        }
+
+        .legend-title {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #e0e0ff;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #2a2a3a;
+        }
+
+        .legend-items {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+            border: 2px solid;
+        }
+
+        .legend-text {
+            font-size: 13px;
+            color: #a0a0c0;
+            flex: 1;
+        }
+
+        /* Back Button */
+        .back-btn {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            padding: 12px 24px;
+            background: linear-gradient(145deg, #1a1a2e, #23233a);
+            border: 1px solid #2a2a3a;
+            color: #e0e0ff;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            z-index: 100;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .back-btn:hover {
+            background: #25253a;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Details Panel */
+        .details-panel {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 450px;
+            height: 100vh;
+            background: #12121d;
+            border-left: 1px solid #2a2a3a;
+            padding: 30px;
+            overflow-y: auto;
+            transform: translateX(100%);
+            transition: transform 0.4s ease;
+            z-index: 1000;
+            box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .details-panel.active {
+            transform: translateX(0);
+        }
+
+        .details-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #2a2a3a;
+        }
+
+        .details-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #e0e0ff;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: #a0a0c0;
+            font-size: 28px;
+            cursor: pointer;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .close-btn:hover {
+            background: #2a2a3a;
+            color: #e0e0ff;
+        }
+
+        .details-content {
+            color: #a0a0c0;
+        }
+
+        .details-section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 17px;
+            font-weight: 600;
+            color: #e0e0ff;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #2a2a3a;
+        }
+
+        .details-list {
+            list-style: none;
+        }
+
+        .details-list li {
+            padding: 12px 0;
+            border-bottom: 1px solid #2a2a3a;
+            position: relative;
+            padding-left: 25px;
+        }
+
+        .details-list li:before {
+            content: "▸";
+            position: absolute;
+            left: 0;
+            color: #4d7fff;
+            font-weight: bold;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1400px) {
+            .components-grid {
+                grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+                gap: 30px;
+                padding: 25px;
+            }
+            
+            .tree-horizontal {
+                gap: 40px;
+            }
+            
+            .tree-level {
+                min-width: 280px;
+            }
+            
+            .node-content {
+                min-width: 250px;
+            }
+            
+            .entity-options {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .entity-option {
+                min-width: 100%;
+            }
+        }
+
+        @media (max-width: 1200px) {
+            .tree-horizontal {
+                flex-direction: column;
+                gap: 30px;
+            }
+            
+            .tree-level {
+                width: 100%;
+                min-width: auto;
+            }
+            
+            .node-content {
+                width: 100%;
+                min-width: auto;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .components-grid {
+                grid-template-columns: 1fr;
+                gap: 25px;
+                padding: 20px;
+            }
+
+            .architecture-container {
+                min-height: 600px;
+            }
+
+            .details-panel {
+                width: 100%;
+            }
+
+            .legend {
+                display: none;
+            }
+            
+            .navigation-tree {
+                padding: 15px;
+            }
+            
+            .tree-horizontal {
+                gap: 20px;
+            }
+            
+            .layer {
+                padding: 30px 20px;
+            }
+            
+            .layer-title {
+                font-size: 1.5rem;
+            }
+            
+            .entity-btn {
+                padding: 20px 15px;
+            }
+            
+            .entity-icon {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        /* Technology Stack Specific */
+        .tech-stack-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .tech-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid #2a2a3a;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .tech-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-5px);
+        }
+
+        .tech-icon {
+            font-size: 32px;
+            margin-bottom: 15px;
+        }
+
+        .tech-name {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #e0e0ff;
+        }
+
+        .tech-desc {
+            font-size: 13px;
+            color: #a0a0c0;
+        }
+
+        /* Subsystem Specific */
+        .subsystem-info {
+            background: rgba(77, 127, 255, 0.1);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 40px;
+            border: 1px solid rgba(77, 127, 255, 0.3);
+        }
+
+        .subsystem-title {
+            font-size: 1.5rem;
+            color: #4d7fff;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .subsystem-description {
+            font-size: 15px;
+            line-height: 1.6;
+            color: #b0b0d0;
+        }
+
+        /* Container Specific */
+        .container-info {
+            background: rgba(13, 202, 240, 0.1);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 40px;
+            border: 1px solid rgba(13, 202, 240, 0.3);
+        }
+
+        .container-title {
+            font-size: 1.3rem;
+            color: #0dcaf0;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .container-description {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #b0b0d0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>БИОНИЧЕСКИЙ ПРОТЕЗ РУКИ</h1>
+            <p>Архитектурная визуализация по методологии C4 с перспективой пользователя</p>
+        </div>
+
+        <!-- Entity Selector -->
+        <div class="entity-selector">
+            <div class="entity-selector-title">Выберите роль пользователя для отображения соответствующей архитектуры:</div>
+            <div class="entity-options">
+                <div class="entity-option">
+                    <button class="entity-btn" data-entity="clinical-specialist">
+                        <span class="entity-icon">👨‍⚕️</span>
+                        Клинический специалист
+                        <div class="entity-description">Врач, терапевт или специалист по реабилитации, осуществляющий настройку и калибровку протеза</div>
+                    </button>
+                </div>
+                <div class="entity-option">
+                    <button class="entity-btn" data-entity="prosthesis-user">
+                        <span class="entity-icon">🧑</span>
+                        Пользователь протеза
+                        <div class="entity-description">Конечный пользователь бионического протеза, осуществляющий ежедневное управление и настройки</div>
+                    </button>
+                </div>
+                <div class="entity-option">
+                    <button class="entity-btn" data-entity="system-developer">
+                        <span class="entity-icon">👨‍💻</span>
+                        Разработчик системы
+                        <div class="entity-description">Инженер или разработчик, работающий со всей архитектурой системы для поддержки и развития</div>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Tree -->
+        <div class="navigation-tree" id="navigationTree">
+            <svg class="tree-connections-svg" id="treeConnectionsSvg">
+                <defs>
+                    <marker id="tree-arrowhead" viewBox="0 0 10 10" refX="9" refY="5" 
+                            markerWidth="8" markerHeight="8" orient="auto">
+                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#2a2a3a"/>
+                    </marker>
+                </defs>
+            </svg>
+            <!-- Tree will be dynamically rendered -->
+        </div>
+
+        <!-- Architecture Container -->
+        <div class="architecture-container" id="architectureContainer">
+            <svg class="layer-connections-svg" id="layerConnectionsSvg">
+                <defs>
+                    <marker id="arrowhead" viewBox="0 0 10 10" refX="9" refY="5" 
+                            markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#4d7fff"/>
+                    </marker>
+                    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+                        <feGaussianBlur stdDeviation="2" result="blur"/>
+                        <feMerge>
+                            <feMergeNode in="blur"/>
+                            <feMergeNode in="SourceGraphic"/>
+                        </feMerge>
+                    </filter>
+                </defs>
+            </svg>
+
+            <div class="layers-container" id="layersContainer">
+                <!-- Layers will be dynamically generated -->
+            </div>
+
+            <!-- Back Button -->
+            <button class="back-btn" id="backBtn" onclick="goBack()">
+                <span>←</span> Назад
+            </button>
+
+            <!-- Legend -->
+            <div class="legend">
+                <div class="legend-title">Уровни архитектуры</div>
+                <div class="legend-items">
+                    <div class="legend-item">
+                        <div class="legend-color" style="border-color: #ffffff; background: rgba(255,255,255,0.1);"></div>
+                        <span class="legend-text">Сущность</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="border-color: #4d7fff; background: rgba(77,127,255,0.1);"></div>
+                        <span class="legend-text">Подсистема</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="border-color: #0dcaf0; background: rgba(13,202,240,0.1);"></div>
+                        <span class="legend-text">Контейнер</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="border-color: #00d4aa; background: rgba(0,212,170,0.1);"></div>
+                        <span class="legend-text">Компонент</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="border-color: #ff6b6b; background: rgba(255,107,107,0.1);"></div>
+                        <span class="legend-text">Технологии</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Details Panel -->
+    <div class="details-panel" id="detailsPanel">
+        <div class="details-header">
+            <h2 class="details-title" id="detailsTitle">Детали компонента</h2>
+            <button class="close-btn" onclick="closeDetails()">×</button>
+        </div>
+        <div class="details-content" id="detailsContent">
+            <!-- Details will be loaded here -->
+        </div>
+    </div>
+
+    <script>
+        // Complete Architecture Data Structure - Updated with nested containers/components
+        const architecture = {
+            // Root Entities (First Level)
+            'clinical-specialist': {
+                id: 'clinical-specialist',
+                name: 'Клинический специалист',
+                description: 'Врач, терапевт или специалист по реабилитации, осуществляющий настройку и калибровку протеза',
+                icon: '👨‍⚕️',
+                type: 'entity',
+                children: ['train-transfer-program']
+            },
+
+            'prosthesis-user': {
+                id: 'prosthesis-user',
+                name: 'Пользователь протеза',
+                description: 'Конечный пользователь бионического протеза, осуществляющий ежедневное управление и настройки',
+                icon: '🧑',
+                type: 'entity',
+                children: ['ai-prosthetic-arm']
+            },
+
+            'system-developer': {
+                id: 'system-developer',
+                name: 'Разработчик системы',
+                description: 'Инженер или разработчик, работающий со всей архитектурой системы для поддержки и развития',
+                icon: '👨‍💻',
+                type: 'entity',
+                children: ['train-transfer-program', 'ai-prosthetic-arm']
+            },
+
+            // TrainTransfer Program Subsystem
+            'train-transfer-program': {
+                id: 'train-transfer-program',
+                name: 'TrainTransfer Program',
+                subtitle: 'Подсистема предварительной калибровки',
+                description: 'Программно-аппаратный комплекс для калибровки и оптимизации позиционирования электродов с использованием ИИ-алгоритмов анализа ЭМГ-сигналов',
+                icon: '🏥',
+                type: 'subsystem',
+                children: ['clinical-workstation-container', 'data-acquisition-container', 'tech-stack-train'],
+                accessibleTo: ['clinical-specialist', 'system-developer']
+            },
+
+            // AI Prosthetic Arm Subsystem
+            'ai-prosthetic-arm': {
+                id: 'ai-prosthetic-arm',
+                name: 'AI Prosthetic Arm',
+                subtitle: 'Подсистема интеллектуального протеза',
+                description: 'Интеллектуальный активный протез руки со встроенным микрокомпьютером, способный к онлайн-адаптации и распознаванию намерений пользователя',
+                icon: '🤖',
+                type: 'subsystem',
+                children: ['sbc-container', 'mobile-app-container', 'tech-stack-ai'],
+                accessibleTo: ['prosthesis-user', 'system-developer']
+            },
+
+            // CONTAINERS for TrainTransfer Program
+            // Clinical Workstation Container
+            'clinical-workstation-container': {
+                id: 'clinical-workstation-container',
+                name: 'Рабочая станция клинициста',
+                description: 'Desktop приложение для управления процессом калибровки, визуализации данных и принятия решений',
+                icon: '💻',
+                type: 'container',
+                parent: 'train-transfer-program',
+                children: ['visualization-ui', 'ai-optimization-engine', 'database-module', 'export-configuration'],
+                accessibleTo: ['clinical-specialist', 'system-developer']
+            },
+
+            // Data Acquisition Container
+            'data-acquisition-container': {
+                id: 'data-acquisition-container',
+                name: 'Система сбора данных',
+                description: 'Аппаратно-программный комплекс для сбора и обработки ЭМГ-сигналов с матрицы электродов',
+                icon: '📡',
+                type: 'container',
+                parent: 'train-transfer-program',
+                children: ['emg-electrode-matrix', 'hardware-filter', 'data-transfer-protocol'],
+                accessibleTo: ['system-developer'] // Only developer sees this
+            },
+
+            // COMPONENTS for Clinical Workstation Container
+            'visualization-ui': {
+                id: 'visualization-ui',
+                name: 'Модуль визуализации',
+                description: 'Рендеринг тепловой карты активности, управление сценарием калибровки, менеджмент профилей',
+                icon: '👁️',
+                type: 'component',
+                parent: 'clinical-workstation-container',
+                features: [
+                    'Рендерер тепловой карты на 3D-модели',
+                    'Контроллер сценария калибровки',
+                    'Менеджер профилей пациентов',
+                    'Интерактивный интерфейс'
+                ],
+                accessibleTo: ['clinical-specialist', 'system-developer'],
+                details: {
+                    subcomponents: [
+                        'Рендерер тепловой карты - наложение карты активности на 3D-модель культи',
+                        'Контроллер сценария - пошаговое руководство действиями клинициста',
+                        'Менеджер профилей - загрузка, создание, сравнение профилей пациентов'
+                    ],
+                    technologies: '3D визуализация, интерактивные элементы'
+                }
+            },
+
+            'ai-optimization-engine': {
+                id: 'ai-optimization-engine',
+                name: 'AI-движок оптимизации',
+                description: 'Классификация мышечных паттернов, кластеризация сигналов, рекомендация позиций электродов',
+                icon: '🧠',
+                type: 'component',
+                parent: 'clinical-workstation-container',
+                features: [
+                    'Классификация мышечных паттернов',
+                    'Алгоритм кластеризации сигналов',
+                    'Модуль рекомендаций позиций',
+                    'Анализ полной матрицы ЭМГ'
+                ],
+                accessibleTo: ['clinical-specialist', 'system-developer'],
+                details: {
+                    subcomponents: [
+                        'Классификатор мышечных паттернов - сопоставление сигналов с целевыми движениями',
+                        'Алгоритм кластеризации - выявление групп электродов со схожей информацией',
+                        'Модуль рекомендаций - вычисление оптимальных позиций для штатных электродов протеза'
+                    ],
+                    models: 'Нейронные сети, алгоритмы кластеризации',
+                    output: 'Рекомендации по позиционированию электродов'
+                }
+            },
+
+            'database-module': {
+                id: 'database-module',
+                name: 'Модуль взаимодействия с БД',
+                description: 'Управление медицинскими записями, экспорт/импорт данных, интеграция с EHR',
+                icon: '🗃️',
+                type: 'component',
+                parent: 'clinical-workstation-container',
+                features: [
+                    'Синхронизация с медицинской БД',
+                    'Экспорт данных в стандартные форматы',
+                    'Импорт исторических данных пациента',
+                    'Резервное копирование и восстановление'
+                ],
+                accessibleTo: ['clinical-specialist', 'system-developer']
+            },
+
+            'export-configuration': {
+                id: 'export-configuration',
+                name: 'Модуль экспорта конфигурации',
+                description: 'Форматирование данных калибровки и преобразование в формат микрокомпьютера протеза',
+                icon: '📤',
+                type: 'component',
+                parent: 'clinical-workstation-container',
+                features: [
+                    'Сериализация параметров калибровки',
+                    'Преобразование в формат SBC протеза',
+                    'Проверка целостности данных',
+                    'Создание файлов конфигурации'
+                ],
+                accessibleTo: ['clinical-specialist', 'system-developer'],
+                details: {
+                    subcomponents: [
+                        'Сериализатор параметров - форматирование данных (позиции электродов, коэффициенты)',
+                        'Переводчик протоколов - преобразование в формат, понятный микрокомпьютеру протеза'
+                    ],
+                    output_formats: 'JSON, бинарные форматы',
+                    integration: 'Совместимость с AI Prosthetic Arm'
+                }
+            },
+
+            // COMPONENTS for Data Acquisition Container
+            'emg-electrode-matrix': {
+                id: 'emg-electrode-matrix',
+                name: 'Матрица ЭМГ электродов',
+                description: 'Высокоплотная матрица электродов для съема сигналов со всей поверхности культи',
+                icon: '🔌',
+                type: 'component',
+                parent: 'data-acquisition-container',
+                features: [
+                    'Многоканальный съем ЭМГ-сигналов',
+                    'Полное покрытие поверхности культи',
+                    'Высокая плотность расположения электродов'
+                ],
+                accessibleTo: ['system-developer'],
+                details: {
+                    interface: 'USB/Bluetooth',
+                    channels: '128+ каналов ЭМГ',
+                    resolution: '24-бит АЦП',
+                    sampling_rate: '2000 Гц на канал'
+                }
+            },
+
+            'hardware-filter': {
+                id: 'hardware-filter',
+                name: 'Аппаратный фильтр',
+                description: 'Фильтрация и предварительная обработка ЭМГ-сигналов на аппаратном уровне',
+                icon: '⚡',
+                type: 'component',
+                parent: 'data-acquisition-container',
+                features: [
+                    'Аналоговая фильтрация сигналов',
+                    'Усиление и нормализация',
+                    'Подавление шумов и помех'
+                ],
+                accessibleTo: ['system-developer']
+            },
+
+            'data-transfer-protocol': {
+                id: 'data-transfer-protocol',
+                name: 'Протокол передачи данных',
+                description: 'Специализированный протокол для передачи ЭМГ-данных с матрицы на рабочую станцию',
+                icon: '📡',
+                type: 'component',
+                parent: 'data-acquisition-container',
+                features: [
+                    'Высокоскоростная передача данных',
+                    'Сжатие данных в реальном времени',
+                    'Контроль целостности и коррекция ошибок'
+                ],
+                accessibleTo: ['system-developer']
+            },
+
+            // CONTAINERS for AI Prosthetic Arm
+            // SBC Container
+            'sbc-container': {
+                id: 'sbc-container',
+                name: 'Одноплатный компьютер (SBC)',
+                description: 'Выполнение всего стека ПО для управления протезом в реальном времени',
+                icon: '💻',
+                type: 'container',
+                parent: 'ai-prosthetic-arm',
+                children: ['ai-model-config', 'calibration-module', 'motor-control-config', 'gesture-management', 'firmware-updates'],
+                accessibleTo: ['prosthesis-user', 'system-developer']
+            },
+
+            // Mobile App Container
+            'mobile-app-container': {
+                id: 'mobile-app-container',
+                name: 'Мобильное приложение',
+                description: 'Управление настройками, калибровкой, жестами, прошивками и обновлениями',
+                icon: '📱',
+                type: 'container',
+                parent: 'ai-prosthetic-arm',
+                children: ['ai-config-interface', 'calibration-interface', 'gesture-management-ui', 'firmware-management-ui'],
+                accessibleTo: ['prosthesis-user', 'system-developer']
+            },
+
+            // COMPONENTS for SBC Container
+            'ai-model-config': {
+                id: 'ai-model-config',
+                name: 'AI-модель и конфигурация',
+                description: 'Загрузка, управление и настройка AI-моделей для классификации движений',
+                icon: '🧠',
+                type: 'component',
+                parent: 'sbc-container',
+                features: [
+                    'Загрузка и обновление AI-моделей',
+                    'Настройка параметров классификации',
+                    'Адаптивная калибровка под пользователя',
+                    'Управление версиями моделей'
+                ],
+                accessibleTo: ['prosthesis-user', 'system-developer']
+            },
+
+            'calibration-module': {
+                id: 'calibration-module',
+                name: 'Модуль калибровки',
+                description: 'Интерфейс для калибровки ЭМГ-сигналов и настройки чувствительности',
+                icon: '🎛️',
+                type: 'component',
+                parent: 'sbc-container',
+                features: [
+                    'Калибровка базового уровня ЭМГ-сигналов',
+                    'Настройка чувствительности и порогов',
+                    'Тестирование и валидация жестов',
+                    'Создание профилей пользователя'
+                ],
+                accessibleTo: ['prosthesis-user', 'system-developer']
+            },
+
+            'motor-control-config': {
+                id: 'motor-control-config',
+                name: 'Конфигурация моторов',
+                description: 'Настройка параметров сервоприводов, моторов и их управления',
+                icon: '⚙️',
+                type: 'component',
+                parent: 'sbc-container',
+                features: [
+                    'Настройка скорости и силы моторов',
+                    'Конфигурация ПИД-регуляторов',
+                    'Калибровка положений суставов',
+                    'Управление энергопотреблением'
+                ],
+                accessibleTo: ['prosthesis-user', 'system-developer']
+            },
+
+            'gesture-management': {
+                id: 'gesture-management',
+                name: 'Управление жестами',
+                description: 'Создание, редактирование и управление жестами и командами',
+                icon: '👐',
+                type: 'component',
+                parent: 'sbc-container',
+                features: [
+                    'Создание пользовательских жестов',
+                    'Назначение команд жестам',
+                    'Редактирование последовательностей движений',
+                    'Тестирование и отладка жестов'
+                ],
+                accessibleTo: ['prosthesis-user', 'system-developer']
+            },
+
+            'firmware-updates': {
+                id: 'firmware-updates',
+                name: 'Прошивки и обновления',
+                description: 'Управление обновлениями прошивки и программного обеспечения',
+                icon: '🔄',
+                type: 'component',
+                parent: 'sbc-container',
+                features: [
+                    'Проверка обновлений прошивки',
+                    'Безопасная установка обновлений',
+                    'Резервное копирование конфигураций',
+                    'Восстановление предыдущих версий'
+                ],
+                accessibleTo: ['prosthesis-user', 'system-developer']
+            },
+
+            // COMPONENTS for Mobile App Container
+            'ai-config-interface': {
+                id: 'ai-config-interface',
+                name: 'Интерфейс настройки AI',
+                description: 'Пользовательский интерфейс для настройки AI-моделей и параметров классификации',
+                icon: '⚙️',
+                type: 'component',
+                parent: 'mobile-app-container',
+                features: [
+                    'Визуальная настройка параметров модели',
+                    'Тестирование и валидация жестов',
+                    'Анализ точности классификации',
+                    'Управление профилями моделей'
+                ],
+                accessibleTo: ['prosthesis-user', 'system-developer']
+            },
+
+            'calibration-interface': {
+                id: 'calibration-interface',
+                name: 'Интерфейс калибровки',
+                description: 'Интерфейс для проведения калибровки ЭМГ-сигналов прямо с мобильного устройства',
+                icon: '📱',
+                type: 'component',
+                parent: 'mobile-app-container',
+                features: [
+                    'Пошаговая калибровка',
+                    'Визуализация сигналов в реальном времени',
+                    'Настройка чувствительности',
+                    'Сохранение профилей калибровки'
+                ],
+                accessibleTo: ['prosthesis-user', 'system-developer']
+            },
+
+            'gesture-management-ui': {
+                id: 'gesture-management-ui',
+                name: 'Управление жестами (UI)',
+                description: 'Пользовательский интерфейс для создания и управления жестами',
+                icon: '🖐️',
+                type: 'component',
+                parent: 'mobile-app-container',
+                features: [
+                    'Визуальный редактор жестов',
+                    'Назначение действий жестам',
+                    'Тестирование жестов в реальном времени',
+                    'Библиотека жестов'
+                ],
+                accessibleTo: ['prosthesis-user', 'system-developer']
+            },
+
+            'firmware-management-ui': {
+                id: 'firmware-management-ui',
+                name: 'Управление прошивками (UI)',
+                description: 'Интерфейс для управления обновлениями прошивки и ПО',
+                icon: '📲',
+                type: 'component',
+                parent: 'mobile-app-container',
+                features: [
+                    'Проверка доступных обновлений',
+                    'Установка обновлений',
+                    'История обновлений',
+                    'Резервное копирование настроек'
+                ],
+                accessibleTo: ['prosthesis-user', 'system-developer']
+            },
+
+            // Technology Stack for TrainTransfer
+            'tech-stack-train': {
+                id: 'tech-stack-train',
+                name: 'Технологический стек TrainTransfer',
+                subtitle: 'Используемые технологии и инструменты',
+                description: 'Технологии, фреймворки и инструменты для разработки подсистемы калибровки',
+                icon: '🛠️',
+                type: 'tech-stack',
+                parent: 'train-transfer-program',
+                accessibleTo: ['system-developer'],
+                components: [
+                    {
+                        id: 'python-train',
+                        name: 'Python',
+                        description: 'Основной язык для AI и анализа данных',
+                        icon: '🐍',
+                        layer: 'Tech',
+                        tags: ['Язык программирования', 'AI', 'Анализ данных']
+                    },
+                    {
+                        id: 'scipy-numpy',
+                        name: 'SciPy/NumPy',
+                        description: 'Библиотеки обработки сигналов и математических вычислений',
+                        icon: '📊',
+                        layer: 'Tech',
+                        tags: ['Библиотеки', 'DSP', 'Математика']
+                    },
+                    {
+                        id: 'pytorch-tensorflow',
+                        name: 'PyTorch/TensorFlow',
+                        description: 'Фреймворки машинного обучения для AI-моделей',
+                        icon: '🧠',
+                        layer: 'Tech',
+                        tags: ['ML', 'Фреймворк', 'Глубокое обучение']
+                    },
+                    {
+                        id: 'qt-wpf',
+                        name: 'Qt/WPF',
+                        description: 'Фреймворки для графического интерфейса рабочей станции',
+                        icon: '👁️',
+                        layer: 'Tech',
+                        tags: ['GUI', 'Фреймворк', 'UI']
+                    },
+                    {
+                        id: 'sqlite-postgres',
+                        name: 'SQLite/PostgreSQL',
+                        description: 'Системы управления базами данных для локального и медицинского хранения',
+                        icon: '🗃️',
+                        layer: 'Tech',
+                        tags: ['База данных', 'Хранилище', 'SQL']
+                    }
+                ]
+            },
+
+            // Technology Stack for AI Prosthetic Arm
+            'tech-stack-ai': {
+                id: 'tech-stack-ai',
+                name: 'Технологический стек AI Prosthetic Arm',
+                subtitle: 'Используемые технологии и инструменты',
+                description: 'Технологии, фреймворки и инструменты для разработки подсистемы интеллектуального протеза',
+                icon: '🛠️',
+                type: 'tech-stack',
+                parent: 'ai-prosthetic-arm',
+                accessibleTo: ['system-developer'],
+                components: [
+                    {
+                        id: 'rtos',
+                        name: 'FreeRTOS/Zephyr',
+                        description: 'ОС реального времени или облегченный Linux на одноплатном компьютере',
+                        icon: '⚡',
+                        layer: 'Tech',
+                        tags: ['ОС', 'Реальное время', 'Встроенные системы']
+                    },
+                    {
+                        id: 'ccpp-embedded',
+                        name: 'C/C++',
+                        description: 'Для производительного кода, драйверов, управления аппаратными компонентами',
+                        icon: '➕',
+                        layer: 'Tech',
+                        tags: ['Язык программирования', 'Встроенные системы', 'Производительность']
+                    },
+                    {
+                        id: 'tflite-onnx',
+                        name: 'TensorFlow Lite/ONNX Runtime',
+                        description: 'Фреймворки для AI-инференса на edge-устройствах',
+                        icon: '🧠',
+                        layer: 'Tech',
+                        tags: ['ML', 'Инференс', 'Edge вычисления']
+                    },
+                    {
+                        id: 'communication-protocols',
+                        name: 'Протоколы связи',
+                        description: 'UART/SPI/I2C для внутренней связи, Bluetooth/Wi-Fi для внешней',
+                        icon: '📡',
+                        layer: 'Tech',
+                        tags: ['Протоколы', 'Связь', 'Сеть']
+                    }
+                ]
+            }
+        };
+
+        // Application State
+        let currentEntity = null;
+        let currentLayerId = null;
+        let history = [];
+        let componentElements = {};
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add click handlers for entity selection
+            document.querySelectorAll('.entity-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const entity = this.dataset.entity;
+                    selectEntity(entity);
+                });
+            });
+        });
+
+        // Select entity and show corresponding architecture
+        function selectEntity(entity) {
+            currentEntity = entity;
+            currentLayerId = entity;
+            history = [entity];
+            
+            // Update active button
+            document.querySelectorAll('.entity-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.entity === entity) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            // Show architecture visualization
+            document.getElementById('navigationTree').classList.add('active');
+            document.getElementById('architectureContainer').classList.add('active');
+            
+            // Render navigation tree for selected entity
+            renderNavigationTree();
+            renderLayer(entity);
+        }
+
+        // Get accessible nodes for current entity
+        function isAccessible(nodeId) {
+            if (!currentEntity) return false;
+            
+            const node = architecture[nodeId];
+            if (!node) return false;
+            
+            // System developer sees everything
+            if (currentEntity === 'system-developer') return true;
+            
+            // Check if node has accessibleTo property
+            if (node.accessibleTo) {
+                return node.accessibleTo.includes(currentEntity);
+            }
+            
+            // For tech-stack components
+            if (node.components) {
+                // Check if any component is accessible
+                return node.components.some(comp => 
+                    !comp.accessibleTo || comp.accessibleTo.includes(currentEntity)
+                );
+            }
+            
+            // Default to true for backward compatibility
+            return true;
+        }
+
+        // Get filtered navigation tree for current entity and current layer
+        function getNavigationTreeForEntity() {
+            if (!currentEntity) return { levels: [] };
+            
+            const levels = [];
+            
+            // Level 1: Entity
+            levels.push({
+                id: 'level-1',
+                title: 'Сущность',
+                nodes: [currentEntity]
+            });
+            
+            // Level 2: Subsystems accessible to entity
+            const entityNode = architecture[currentEntity];
+            const subsystems = entityNode.children.filter(id => isAccessible(id));
+            if (subsystems.length > 0) {
+                levels.push({
+                    id: 'level-2',
+                    title: 'Подсистемы',
+                    nodes: subsystems
+                });
+            }
+            
+            // Determine active subsystem based on current layer
+            let activeSubsystem = null;
+            if (architecture[currentLayerId]) {
+                const node = architecture[currentLayerId];
+                if (node.type === 'subsystem') {
+                    activeSubsystem = currentLayerId;
+                } else if (node.parent && architecture[node.parent] && architecture[node.parent].type === 'subsystem') {
+                    activeSubsystem = node.parent;
+                } else if (node.type === 'entity') {
+                    // If entity is selected, no subsystem is active
+                } else {
+                    // Try to find subsystem by traversing up the tree
+                    let parent = node.parent;
+                    while (parent && architecture[parent]) {
+                        if (architecture[parent].type === 'subsystem') {
+                            activeSubsystem = parent;
+                            break;
+                        }
+                        parent = architecture[parent].parent;
+                    }
+                }
+            }
+            
+            // Level 3: Containers for active subsystem (if any)
+            if (activeSubsystem) {
+                const subsystemNode = architecture[activeSubsystem];
+                const containers = subsystemNode.children.filter(id => {
+                    const child = architecture[id];
+                    return child && 
+                           (child.type === 'container' || child.type === 'tech-stack') && 
+                           isAccessible(id);
+                });
+                
+                if (containers.length > 0) {
+                    levels.push({
+                        id: 'level-3',
+                        title: subsystemNode.id.includes('train') ? 'Контейнеры TrainTransfer' : 'Контейнеры AI Prosthetic',
+                        nodes: containers
+                    });
+                }
+            }
+            
+            // Determine active container based on current layer
+            let activeContainer = null;
+            if (architecture[currentLayerId]) {
+                const node = architecture[currentLayerId];
+                if (node.type === 'container' || node.type === 'tech-stack') {
+                    activeContainer = currentLayerId;
+                } else if (node.parent && architecture[node.parent] && 
+                          (architecture[node.parent].type === 'container' || architecture[node.parent].type === 'tech-stack')) {
+                    activeContainer = node.parent;
+                }
+            }
+            
+            // Level 4: Components for active container (if any)
+            if (activeContainer) {
+                const containerNode = architecture[activeContainer];
+                if (containerNode.type === 'tech-stack') {
+                    // For tech-stack, show technology components
+                    const techComponents = containerNode.components ? containerNode.components.filter(comp => 
+                        !comp.accessibleTo || comp.accessibleTo.includes(currentEntity)
+                    ) : [];
+                    
+                    if (techComponents.length > 0) {
+                        levels.push({
+                            id: 'level-4',
+                            title: 'Технологии',
+                            nodes: techComponents.map(comp => comp.id)
+                        });
+                    }
+                } else if (containerNode.children) {
+                    // For regular containers, show child components
+                    const components = containerNode.children.filter(id => {
+                        const child = architecture[id];
+                        return child && child.type === 'component' && isAccessible(id);
+                    });
+                    
+                    if (components.length > 0) {
+                        levels.push({
+                            id: 'level-4',
+                            title: 'Компоненты',
+                            nodes: components
+                        });
+                    }
+                }
+            }
+            
+            return { levels };
+        }
+
+        // Render navigation tree
+        function renderNavigationTree() {
+            const container = document.getElementById('navigationTree');
+            container.innerHTML = '';
+            
+            const navigationTree = getNavigationTreeForEntity();
+            
+            // Create horizontal tree container
+            const treeHorizontal = document.createElement('div');
+            treeHorizontal.className = 'tree-horizontal';
+            treeHorizontal.id = 'treeHorizontal';
+            
+            // Render each level
+            navigationTree.levels.forEach(level => {
+                const levelElement = document.createElement('div');
+                levelElement.className = 'tree-level';
+                levelElement.dataset.levelId = level.id;
+                
+                // Add level title
+                const titleElement = document.createElement('div');
+                titleElement.className = 'tree-level-title';
+                titleElement.textContent = level.title;
+                levelElement.appendChild(titleElement);
+                
+                // Add nodes for this level
+                level.nodes.forEach(nodeId => {
+                    let node;
+                    // Check if nodeId is from tech-stack components
+                    if (typeof nodeId === 'string') {
+                        node = architecture[nodeId];
+                    } else if (typeof nodeId === 'object' && nodeId.id) {
+                        // For tech-stack components
+                        node = nodeId;
+                    }
+                    
+                    if (node) {
+                        const nodeElement = createTreeNode(node);
+                        levelElement.appendChild(nodeElement);
+                    }
+                });
+                
+                treeHorizontal.appendChild(levelElement);
+            });
+            
+            container.appendChild(treeHorizontal);
+            
+            // Update active states after tree is rendered
+            updateNavigationTreeActiveState();
+            
+            // Draw connections after a short delay
+            setTimeout(() => {
+                drawTreeConnections();
+            }, 100);
+        }
+
+        // Create tree node// Create tree node
+        function createTreeNode(node) {
+            const treeNode = document.createElement('div');
+            treeNode.className = 'tree-node';
+            
+            const nodeContent = document.createElement('div');
+            nodeContent.className = 'node-content';
+            
+            // Handle both regular nodes and tech-stack components
+            if (typeof node === 'string') {
+                const archNode = architecture[node];
+                if (!archNode) return treeNode;
+                node = archNode;
+            }
+            
+            nodeContent.dataset.nodeId = node.id;
+            nodeContent.dataset.type = node.type;
+            
+            // Make components and tech-stack components non-clickable
+            if (node.type === 'component' || (node.type === 'tech-stack' && node.components) || 
+                (node.icon && node.layer === 'Tech')) {
+                nodeContent.classList.add('non-clickable');
+            } else {
+                nodeContent.onclick = (e) => {
+                    e.stopPropagation();
+                    if (architecture[node.id] && isAccessible(node.id)) {
+                        navigateToLayer(node.id);
+                    }
+                };
+            }
+            
+            // Determine icon based on node type
+            let icon = node.icon || '📋';
+            let name = node.name || 'Без названия';
+            let subtitle = node.subtitle || node.description || '';
+            
+            nodeContent.innerHTML = `
+                <div class="node-title">
+                    <span class="icon">${icon}</span>
+                    ${name}
+                </div>
+                <div class="node-subtitle">${subtitle.substring(0, 70)}${subtitle.length > 70 ? '...' : ''}</div>
+            `;
+            
+            treeNode.appendChild(nodeContent);
+            return treeNode;
+        }
+
+        // Update navigation tree active state
+        // Update navigation tree active state
+        function updateNavigationTreeActiveState() {
+            // Remove all active classes
+            document.querySelectorAll('.node-content').forEach(el => {
+                el.classList.remove('active', 'active-parent');
+            });
+            
+            if (!currentLayerId) return;
+            
+            // Add active class to current layer - FIXED SELECTOR
+            const currentElement = document.querySelector(`.node-content[data-node-id="${currentLayerId}"]`);
+            if (currentElement) {
+                currentElement.classList.add('active');
+            }
+            
+            // Find and highlight parent nodes (subsystems and containers)
+            const node = architecture[currentLayerId];
+            if (!node) return;
+            
+            // Find parent subsystem
+            let parentId = node.parent;
+            while (parentId && architecture[parentId]) {
+                const parent = architecture[parentId];
+                if (parent.type === 'subsystem' || parent.type === 'container' || parent.type === 'entity') {
+                    const parentElement = document.querySelector(`.node-content[data-node-id="${parentId}"]`);
+                    if (parentElement) {
+                        parentElement.classList.add('active-parent');
+                    }
+                }
+                parentId = parent.parent;
+            }
+            
+            // If current node is a container, also highlight its accessible children
+            if (node.type === 'container' && node.children) {
+                const accessibleChildren = node.children.filter(childId => {
+                    const child = architecture[childId];
+                    return child && child.type === 'component' && isAccessible(childId);
+                });
+                
+                accessibleChildren.forEach(childId => {
+                    const childElement = document.querySelector(`.node-content[data-node-id="${childId}"]`);
+                    if (childElement) {
+                        childElement.classList.add('active-parent');
+                    }
+                });
+            }
+            
+            // If current node is a subsystem, highlight its accessible containers
+            if (node.type === 'subsystem' && node.children) {
+                const accessibleContainers = node.children.filter(childId => {
+                    const child = architecture[childId];
+                    return child && 
+                        (child.type === 'container' || child.type === 'tech-stack') && 
+                        isAccessible(childId);
+                });
+                
+                accessibleContainers.forEach(childId => {
+                    const childElement = document.querySelector(`.node-content[data-node-id="${childId}"]`);
+                    if (childElement) {
+                        childElement.classList.add('active-parent');
+                    }
+                });
+            }
+            
+            // If current node is a component, highlight its container and subsystem
+            if (node.type === 'component' && node.parent) {
+                const container = architecture[node.parent];
+                if (container) {
+                    const containerElement = document.querySelector(`.node-content[data-node-id="${container.id}"]`);
+                    if (containerElement) {
+                        containerElement.classList.add('active-parent');
+                    }
+                    
+                    // Find and highlight parent subsystem
+                    if (container.parent) {
+                        const subsystem = architecture[container.parent];
+                        if (subsystem) {
+                            const subsystemElement = document.querySelector(`.node-content[data-node-id="${subsystem.id}"]`);
+                            if (subsystemElement) {
+                                subsystemElement.classList.add('active-parent');
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Draw tree connections// Draw tree connections
+        function drawTreeConnections() {
+            const svg = document.getElementById('treeConnectionsSvg');
+            if (!svg) return;
+            
+            // Clear existing connections
+            svg.innerHTML = '<defs><marker id="tree-arrowhead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#2a2a3a"/></marker></defs>';
+            
+            const container = document.querySelector('.navigation-tree');
+            const treeHorizontal = document.getElementById('treeHorizontal');
+            if (!container || !treeHorizontal) return;
+            
+            const containerRect = container.getBoundingClientRect();
+            const navigationTree = getNavigationTreeForEntity();
+            
+            // Draw connections between parent and child nodes
+            navigationTree.levels.forEach((level, levelIndex) => {
+                if (levelIndex === navigationTree.levels.length - 1) return;
+                
+                const nextLevel = navigationTree.levels[levelIndex + 1];
+                
+                level.nodes.forEach(parentId => {
+                    let parentNode;
+                    if (typeof parentId === 'string') {
+                        parentNode = architecture[parentId];
+                    }
+                    
+                    if (!parentNode || !parentNode.children) return;
+                    
+                    // Get parent element - FIXED SELECTOR
+                    const parentElement = container.querySelector(`.node-content[data-node-id="${parentNode.id}"]`);
+                    if (!parentElement || !parentElement.parentElement) return;
+                    
+                    const parentRect = parentElement.parentElement.getBoundingClientRect();
+                    
+                    // Get children for this parent
+                    let childNodes = [];
+                    if (parentNode.type === 'tech-stack' && parentNode.components) {
+                        childNodes = parentNode.components;
+                    } else if (parentNode.children) {
+                        childNodes = parentNode.children.map(id => architecture[id]).filter(Boolean);
+                    }
+                    
+                    childNodes.forEach(child => {
+                        // Check if child is in next level
+                        const isChildInNextLevel = nextLevel.nodes.some(nodeId => {
+                            if (typeof nodeId === 'string') {
+                                return nodeId === child.id;
+                            } else if (nodeId && nodeId.id) {
+                                return nodeId.id === child.id;
+                            }
+                            return false;
+                        });
+                        
+                        if (isChildInNextLevel) {
+                            // Get child element - FIXED SELECTOR
+                            const childElement = container.querySelector(`.node-content[data-node-id="${child.id}"]`);
+                            if (!childElement || !childElement.parentElement) return;
+                            
+                            const childRect = childElement.parentElement.getBoundingClientRect();
+                            
+                            const startX = parentRect.right - containerRect.left;
+                            const startY = parentRect.top + parentRect.height / 2 - containerRect.top;
+                            const endX = childRect.left - containerRect.left;
+                            const endY = childRect.top + childRect.height / 2 - containerRect.top;
+                            
+                            // Create curved path
+                            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                            const controlX1 = startX + (endX - startX) * 0.5;
+                            const controlX2 = startX + (endX - startX) * 0.5;
+                            
+                            path.setAttribute('d', `M ${startX} ${startY} C ${controlX1} ${startY}, ${controlX2} ${endY}, ${endX} ${endY}`);
+                            path.setAttribute('class', 'tree-connection');
+                            
+                            // Set color based on parent node type
+                            const parentType = parentNode.type;
+                            let color = '#2a2a3a';
+                            switch(parentType) {
+                                case 'entity': color = '#ffffff'; break;
+                                case 'subsystem': color = '#4d7fff'; break;
+                                case 'container': color = '#0dcaf0'; break;
+                                case 'tech-stack': color = '#ff6b6b'; break;
+                                default: color = '#2a2a3a';
+                            }
+                            
+                            path.setAttribute('stroke', color);
+                            path.setAttribute('marker-end', 'url(#tree-arrowhead)');
+                            
+                            svg.appendChild(path);
+                        }
+                    });
+                });
+            });
+        }
+
+        // Render a specific layer
+        function renderLayer(layerId) {
+            const layer = architecture[layerId];
+            if (!layer || !isAccessible(layerId)) {
+                // If layer is not accessible, navigate to entity root
+                currentLayerId = currentEntity;
+                history = [currentEntity];
+                renderLayer(currentEntity);
+                return;
+            }
+
+            // Clear component elements cache
+            componentElements = {};
+            
+            // Get or create layer container
+            const layersContainer = document.getElementById('layersContainer');
+            let layerElement = document.getElementById(`layer-${layerId}`);
+            
+            if (!layerElement) {
+                layerElement = document.createElement('div');
+                layerElement.id = `layer-${layerId}`;
+                layerElement.className = 'layer hidden';
+                layersContainer.appendChild(layerElement);
+            }
+
+            // Update all layers visibility
+            document.querySelectorAll('.layer').forEach(el => {
+                el.classList.remove('active');
+                el.classList.add('hidden');
+            });
+
+            // Show current layer
+            layerElement.classList.remove('hidden');
+            setTimeout(() => {
+                layerElement.classList.add('active');
+            }, 10);
+
+            // Clear and render layer content
+            layerElement.innerHTML = '';
+            
+            // Add layer header
+            const header = document.createElement('div');
+            header.className = 'layer-header';
+            header.innerHTML = `
+                <h2 class="layer-title">${layer.name}</h2>
+                ${layer.subtitle ? `<div class="layer-subtitle">${layer.subtitle}</div>` : ''}
+                ${layer.description ? `<div class="layer-subtitle">${layer.description}</div>` : ''}
+            `;
+            layerElement.appendChild(header);
+
+            // Add specific info based on node type
+            if (layer.type === 'entity') {
+                const entityInfo = document.createElement('div');
+                entityInfo.className = 'subsystem-info';
+                entityInfo.innerHTML = `
+                    <div class="subsystem-title">
+                        <span>${layer.icon}</span>
+                        <span>Права доступа для ${layer.name}</span>
+                    </div>
+                    <div class="subsystem-description">
+                        ${getEntityAccessDescription(layer.id)}
+                    </div>
+                `;
+                layerElement.appendChild(entityInfo);
+            } else if (layer.type === 'subsystem') {
+                const subsystemInfo = document.createElement('div');
+                subsystemInfo.className = 'subsystem-info';
+                subsystemInfo.innerHTML = `
+                    <div class="subsystem-title">
+                        <span>${layer.icon}</span>
+                        <span>${layer.name}</span>
+                    </div>
+                    <div class="subsystem-description">
+                        ${layer.description}
+                    </div>
+                `;
+                layerElement.appendChild(subsystemInfo);
+            } else if (layer.type === 'container') {
+                const containerInfo = document.createElement('div');
+                containerInfo.className = 'container-info';
+                containerInfo.innerHTML = `
+                    <div class="container-title">
+                        <span>${layer.icon}</span>
+                        <span>${layer.name}</span>
+                    </div>
+                    <div class="container-description">
+                        ${layer.description}
+                    </div>
+                `;
+                layerElement.appendChild(containerInfo);
+            }
+
+            // Render children based on node type
+            if (layer.type === 'tech-stack') {
+                renderTechStack(layerId, layerElement);
+            } else if (layer.children && layer.children.length > 0) {
+                // Filter children by accessibility
+                const accessibleChildren = layer.children.filter(childId => {
+                    const child = architecture[childId];
+                    return child && isAccessible(childId);
+                });
+                
+                if (accessibleChildren.length > 0) {
+                    renderChildNodes(layerId, layerElement, accessibleChildren);
+                } else {
+                    const noAccessMsg = document.createElement('div');
+                    noAccessMsg.className = 'subsystem-info';
+                    noAccessMsg.innerHTML = `
+                        <div class="subsystem-description">
+                            Нет доступных компонентов для текущей роли пользователя.
+                        </div>
+                    `;
+                    layerElement.appendChild(noAccessMsg);
+                }
+            }
+
+            // Update navigation tree active state
+            updateNavigationTreeActiveState();
+            
+            // Show/hide back button
+            const backBtn = document.getElementById('backBtn');
+            if (layer.type !== 'entity') {
+                backBtn.style.display = 'flex';
+            } else {
+                backBtn.style.display = 'none';
+            }
+            
+            // Update connections after render
+            setTimeout(() => {
+                drawTreeConnections();
+            }, 300);
+        }
+
+        // Get entity access description
+        function getEntityAccessDescription(entityId) {
+            switch(entityId) {
+                case 'clinical-specialist':
+                    return 'Клинический специалист имеет доступ только к подсистеме TrainTransfer Program для калибровки и настройки протеза. Доступные компоненты: модуль визуализации, AI-система оптимизации каналов, модуль взаимодействия с БД и модуль экспорта конфигурации.';
+                case 'prosthesis-user':
+                    return 'Пользователь протеза имеет доступ только к подсистеме AI Prosthetic Arm для управления и настройки протеза. Доступные функции: настройка AI-модели, калибровка, управление моторами, настройка жестов, обновление прошивок.';
+                case 'system-developer':
+                    return 'Разработчик системы имеет полный доступ ко всей архитектуре, включая обе подсистемы и все их компоненты.';
+                default:
+                    return '';
+            }
+        }
+
+        // Render child nodes for a layer
+        function renderChildNodes(layerId, container, children) {
+            // Create components grid
+            const grid = document.createElement('div');
+            grid.className = 'components-grid';
+            container.appendChild(grid);
+
+            // Create child nodes
+            children.forEach((childId, index) => {
+                const child = architecture[childId];
+                if (!child) return;
+
+                const componentElement = document.createElement('div');
+                componentElement.className = `component layer-${getLayerNumber(child.type)} fade-in`;
+                componentElement.style.animationDelay = `${index * 0.1}s`;
+                componentElement.dataset.id = child.id;
+                
+                componentElement.innerHTML = `
+                    <div class="component-header">
+                        <div class="component-icon">${child.icon || '📋'}</div>
+                        <div class="component-title-section">
+                            <div class="component-title">
+                                ${child.name}
+                                <span class="component-layer-badge" style="background: ${getLayerColor(getLayerNumber(child.type))}">
+                                    ${getLayerType(child)}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="component-description">${child.description}</div>
+                    ${child.features ? `
+                        <div class="component-features">
+                            ${child.features.map(feature => `
+                                <div class="feature-item">${feature}</div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                `;
+
+                // Add click handler only for components in the main view (not in tree)
+                componentElement.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (child.type === 'component') {
+                        showComponentDetails(child);
+                    } else {
+                        navigateToLayer(child.id);
+                    }
+                });
+
+                grid.appendChild(componentElement);
+                componentElements[child.id] = componentElement;
+            });
+        }
+
+        // Render technology stack
+        function renderTechStack(layerId, container) {
+            const layer = architecture[layerId];
+            if (!layer || !layer.components) return;
+
+            const grid = document.createElement('div');
+            grid.className = 'tech-stack-container';
+            container.appendChild(grid);
+
+            // Filter components by accessibility
+            const accessibleComponents = layer.components.filter(comp => 
+                !comp.accessibleTo || comp.accessibleTo.includes(currentEntity)
+            );
+            
+            accessibleComponents.forEach((tech, index) => {
+                const techElement = document.createElement('div');
+                techElement.className = 'tech-item fade-in';
+                techElement.style.animationDelay = `${index * 0.1}s`;
+                techElement.dataset.id = tech.id;
+                
+                techElement.innerHTML = `
+                    <div class="tech-icon">${tech.icon}</div>
+                    <div class="tech-name">${tech.name}</div>
+                    <div class="tech-desc">${tech.description}</div>
+                `;
+                
+                techElement.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    showComponentDetails(tech);
+                });
+                
+                grid.appendChild(techElement);
+                componentElements[tech.id] = techElement;
+            });
+        }
+
+        // Get layer type label
+        function getLayerType(node) {
+            switch(node.type) {
+                case 'entity': return 'Сущность';
+                case 'subsystem': return 'Подсистема';
+                case 'container': return 'Контейнер';
+                case 'component': return 'Компонент';
+                case 'tech-stack': return 'Tech';
+                default: return '';
+            }
+        }
+
+        // Get layer number based on type
+        function getLayerNumber(type) {
+            switch(type) {
+                case 'entity': return 1;
+                case 'subsystem': return 1;
+                case 'container': return 2;
+                case 'component': return 3;
+                case 'tech-stack': return 4;
+                default: return 1;
+            }
+        }
+
+        // Get layer color
+        function getLayerColor(layer) {
+            const colors = {
+                1: '#4d7fff',
+                2: '#0dcaf0',
+                3: '#00d4aa',
+                4: '#ff6b6b'
+            };
+            return colors[layer] || '#666';
+        }
+
+        // Navigate to a specific layer
+        function navigateToLayer(layerId) {
+            if (!architecture[layerId] || !isAccessible(layerId)) return;
+            
+            // Add to history if not already there
+            if (history[history.length - 1] !== layerId) {
+                history.push(layerId);
+            }
+            
+            // Update current layer
+            currentLayerId = layerId;
+            
+            // Render the layer
+            renderLayer(layerId);
+            renderNavigationTree();
+        }
+
+        // Go back in history
+        function goBack() {
+            if (history.length > 1) {
+                history.pop();
+                currentLayerId = history[history.length - 1];
+                renderLayer(currentLayerId);
+                renderNavigationTree();
+            }
+        }
+
+        // Show component details
+        function showComponentDetails(component) {
+            const prevLayerId = currentLayerId;
+            currentLayerId = component.id;
+            updateNavigationTreeActiveState();
+            const panel = document.getElementById('detailsPanel');
+            const title = document.getElementById('detailsTitle');
+            const content = document.getElementById('detailsContent');
+            
+            title.innerHTML = `
+                <span>${component.icon}</span>
+                <span>${component.name}</span>
+            `;
+            
+            let detailsHTML = `
+                <div class="details-section">
+                    <h3 class="section-title">📝 Описание</h3>
+                    <p>${component.details?.description || component.description || 'Описание отсутствует'}</p>
+                </div>
+            `;
+            
+            if (component.features && component.features.length > 0) {
+                detailsHTML += `
+                    <div class="details-section">
+                        <h3 class="section-title">✨ Ключевые возможности</h3>
+                        <ul class="details-list">
+                            ${component.features.map(feature => `<li>${feature}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            if (component.details?.subcomponents) {
+                detailsHTML += `
+                    <div class="details-section">
+                        <h3 class="section-title">⚙️ Подкомпоненты</h3>
+                        <ul class="details-list">
+                            ${component.details.subcomponents.map(sub => `<li>${sub}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            if (component.details?.technologies) {
+                detailsHTML += `
+                    <div class="details-section">
+                        <h3 class="section-title">🛠️ Используемые технологии</h3>
+                        <p>${component.details.technologies}</p>
+                    </div>
+                `;
+            }
+            
+            if (component.details?.interface || component.details?.channels || component.details?.resolution) {
+                detailsHTML += `
+                    <div class="details-section">
+                        <h3 class="section-title">🔧 Технические характеристики</h3>
+                        <ul class="details-list">
+                            ${component.details.interface ? `<li><strong>Интерфейс:</strong> ${component.details.interface}</li>` : ''}
+                            ${component.details.channels ? `<li><strong>Каналы:</strong> ${component.details.channels}</li>` : ''}
+                            ${component.details.resolution ? `<li><strong>Разрешение:</strong> ${component.details.resolution}</li>` : ''}
+                            ${component.details.sampling_rate ? `<li><strong>Частота дискретизации:</strong> ${component.details.sampling_rate}</li>` : ''}
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            if (component.details?.models || component.details?.output) {
+                detailsHTML += `
+                    <div class="details-section">
+                        <h3 class="section-title">🧮 Алгоритмы и модели</h3>
+                        <ul class="details-list">
+                            ${component.details.models ? `<li><strong>Модели:</strong> ${component.details.models}</li>` : ''}
+                            ${component.details.output ? `<li><strong>Выходные данные:</strong> ${component.details.output}</li>` : ''}
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            if (component.details?.output_formats || component.details?.integration) {
+                detailsHTML += `
+                    <div class="details-section">
+                        <h3 class="section-title">🔗 Интеграция и форматы</h3>
+                        <ul class="details-list">
+                            ${component.details.output_formats ? `<li><strong>Форматы вывода:</strong> ${component.details.output_formats}</li>` : ''}
+                            ${component.details.integration ? `<li><strong>Интеграция:</strong> ${component.details.integration}</li>` : ''}
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            if (component.tags && component.tags.length > 0) {
+                detailsHTML += `
+                    <div class="details-section">
+                        <h3 class="section-title">🏷️ Теги и категории</h3>
+                        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                            ${component.tags.map(tag => `<span style="background: #2a2a3a; padding: 6px 12px; border-radius: 6px; font-size: 12px;">${tag}</span>`).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Add parent information if available
+            if (component.parent && architecture[component.parent]) {
+                const parent = architecture[component.parent];
+                detailsHTML += `
+                    <div class="details-section">
+                        <h3 class="section-title">📁 Родительский контейнер</h3>
+                        <p><strong>${parent.name}</strong> - ${parent.description}</p>
+                    </div>
+                `;
+            }
+            
+            content.innerHTML = detailsHTML;
+            panel.classList.add('active');
+        }
+
+        // Close details panel
+        function closeDetails() {
+            document.getElementById('detailsPanel').classList.remove('active');
+        }
+
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            drawTreeConnections();
+        });
+
+        // Close details on escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeDetails();
+            }
+        });
+
+        // Close details when clicking outside
+        document.addEventListener('click', function(e) {
+            const panel = document.getElementById('detailsPanel');
+            if (panel.classList.contains('active') && 
+                !panel.contains(e.target) && 
+                !e.target.closest('.component') &&
+                !e.target.closest('.tech-item') &&
+                !e.target.closest('.node-content[data-type="component"]')) {
+                closeDetails();
+            }
+        });
+    </script>
+</body>
+</html>
