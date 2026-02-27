@@ -3,7 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bionic Prosthetic Arm - Architecture Visualization</title>
+    <title>Hangzhou B-Limb Arm - Architecture Visualization</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="96x96" href="favicon-96x96.png">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" sizes="any">
+    <link rel="icon" href="favicon.ico">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="manifest" href="site.webmanifest">
+    <meta name="theme-color" content="#ffffff">
+    <meta name="theme-color" content="#0f172a">
     <style>
         * {
             margin: 0;
@@ -278,17 +286,16 @@
             opacity: 0.6;
         }
 
-        /* Architecture Container - Enhanced */
+        /* Architecture Container */
         .architecture-container {
             position: relative;
-            min-height: 1100px;
             background: #12121d;
             border-radius: 16px;
             border: 1px solid #2a2a3a;
-            overflow: hidden;
             margin-bottom: 40px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             display: none;
+            height: auto; 
         }
 
         .architecture-container.active {
@@ -297,35 +304,29 @@
 
         /* Layers Container */
         .layers-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            position: relative;
             transition: transform 0.4s ease;
         }
 
         .layer {
-            position: absolute;
-            width: 100%;
-            height: 100%;
+            position: relative; /* или static */
+            width: auto;
+            height: auto;
             padding: 50px;
-            transition: all 0.4s ease;
+            transition: opacity 0.4s ease, transform 0.4s ease;
             transform-origin: center;
-        }
-
-        .layer.hidden {
-            opacity: 0;
-            visibility: hidden;
-            transform: scale(0.9);
-            pointer-events: none;
+            display: none; /* по умолчанию скрыт */
         }
 
         .layer.active {
+            display: block;
             opacity: 1;
-            visibility: visible;
             transform: scale(1);
-            pointer-events: all;
+            /* visibility и pointer-events не нужны */
+        }
+
+        .layer.hidden {
+            display: none;
         }
 
         .layer-header {
@@ -860,10 +861,20 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>БИОНИЧЕСКИЙ ПРОТЕЗ РУКИ B-LINK(ETRI Hangzhou)</h1>
-            <p>Архитектурная визуализация по методологии C4 с перспективой пользователя</p>
+        <!-- Блок авторизации -->
+        <div id="loginOverlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0a0a0f; display: flex; align-items: center; justify-content: center; z-index: 9999;">
+            <div style="background: #12121d; padding: 40px; border-radius: 16px; border: 1px solid #2a2a3a; box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-width: 400px; width: 90%;">
+                <h2 style="color: #e0e0ff; margin-bottom: 20px; text-align: center; font-size: 1.8rem;">Доступ к архитектуре</h2>
+                <p style="color: #a0a0c0; margin-bottom: 30px; text-align: center;">Введите пароль для просмотра</p>
+                <input type="password" id="passwordInput" placeholder="Пароль" style="width: 100%; padding: 15px; background: #1e1e2e; border: 2px solid #2a2a3a; border-radius: 8px; color: #e0e0ff; font-size: 1rem; margin-bottom: 20px; outline: none;">
+                <button id="loginBtn" style="width: 100%; padding: 15px; background: linear-gradient(135deg, #4d7fff, #00d4aa); border: none; border-radius: 8px; color: white; font-weight: 600; font-size: 1.1rem; cursor: pointer; transition: opacity 0.3s;">Войти</button>
+                <div id="loginError" style="color: #ff6b6b; margin-top: 20px; text-align: center; display: none;">Неверный пароль</div>
+            </div>
+        </div>
+        <div class="container" id="appContainer">
+            <div class="header">
+            <h1>БИОНИЧЕСКИЙ ПРОТЕЗ РУКИ B-LIMB(ETRI Hangzhou)</h1>
+            <p>Архитектурная визуализация ПО по методологии C4 с перспективой пользователя</p>
         </div>
 
         <!-- Entity Selector -->
@@ -1022,10 +1033,10 @@
                 id: 'ai-prosthetic-arm',
                 name: 'AI Prosthetic Arm',
                 subtitle: 'Подсистема интеллектуального протеза',
-                description: 'Интеллектуальный активный протез руки со встроенным микрокомпьютером, способный к онлайн-адаптации и распознаванию намерений пользователя',
+                description: 'Интеллектуальный активный протез руки со встроенным микрокомпьютером...',
                 icon: '🤖',
                 type: 'subsystem',
-                children: ['sbc-container', 'mobile-app-container', 'tech-stack-ai'],
+                children: ['sbc-container','motor-control-unit', 'mobile-app-container', 'physical-controls', 'tech-stack-ai'],
                 accessibleTo: ['prosthesis-user', 'system-developer']
             },
 
@@ -1205,8 +1216,13 @@
                 icon: '💻',
                 type: 'container',
                 parent: 'ai-prosthetic-arm',
-                children: ['ai-model-config', 'calibration-module', 'motor-control-config', 'gesture-management', 'firmware-updates'],
-                accessibleTo: ['prosthesis-user', 'system-developer']
+                children: [
+                    'ai-model-config',
+                    'calibration-module',
+                    'firmware-updates',
+                    'accelerometer'          // новый компонент
+                ],
+                accessibleTo: ['system-developer']
             },
 
             // Mobile App Container
@@ -1217,7 +1233,7 @@
                 icon: '📱',
                 type: 'container',
                 parent: 'ai-prosthetic-arm',
-                children: ['ai-config-interface', 'calibration-interface', 'gesture-management-ui', 'firmware-management-ui'],
+                children: ['ai-config-interface', 'calibration-interface', 'gesture-management-ui', 'firmware-management-ui', 'bluetooth-connection', 'mode-selector' ],
                 accessibleTo: ['prosthesis-user', 'system-developer']
             },
 
@@ -1253,38 +1269,38 @@
                 ],
                 accessibleTo: ['prosthesis-user', 'system-developer']
             },
+            // РЕАЛИЗОВАНО НА MCU
+            // 'motor-control-config': {
+            //     id: 'motor-control-config',
+            //     name: 'Конфигурация моторов',
+            //     description: 'Настройка параметров сервоприводов, моторов и их управления',
+            //     icon: '⚙️',
+            //     type: 'component',
+            //     parent: 'sbc-container',
+            //     features: [
+            //         'Настройка скорости и силы моторов',
+            //         'Конфигурация ПИД-регуляторов',
+            //         'Калибровка положений суставов',
+            //         'Управление энергопотреблением'
+            //     ],
+            //     accessibleTo: ['prosthesis-user', 'system-developer']
+            // },
 
-            'motor-control-config': {
-                id: 'motor-control-config',
-                name: 'Конфигурация моторов',
-                description: 'Настройка параметров сервоприводов, моторов и их управления',
-                icon: '⚙️',
-                type: 'component',
-                parent: 'sbc-container',
-                features: [
-                    'Настройка скорости и силы моторов',
-                    'Конфигурация ПИД-регуляторов',
-                    'Калибровка положений суставов',
-                    'Управление энергопотреблением'
-                ],
-                accessibleTo: ['prosthesis-user', 'system-developer']
-            },
-
-            'gesture-management': {
-                id: 'gesture-management',
-                name: 'Управление жестами',
-                description: 'Создание, редактирование и управление жестами и командами',
-                icon: '👐',
-                type: 'component',
-                parent: 'sbc-container',
-                features: [
-                    'Создание пользовательских жестов',
-                    'Назначение команд жестам',
-                    'Редактирование последовательностей движений',
-                    'Тестирование и отладка жестов'
-                ],
-                accessibleTo: ['prosthesis-user', 'system-developer']
-            },
+            // 'gesture-management': {
+            //     id: 'gesture-management',
+            //     name: 'Управление жестами',
+            //     description: 'Создание, редактирование и управление жестами и командами',
+            //     icon: '👐',
+            //     type: 'component',
+            //     parent: 'sbc-container',
+            //     features: [
+            //         'Создание пользовательских жестов',
+            //         'Назначение команд жестам',
+            //         'Редактирование последовательностей движений',
+            //         'Тестирование и отладка жестов'
+            //     ],
+            //     accessibleTo: ['prosthesis-user', 'system-developer']
+            // },
 
             'firmware-updates': {
                 id: 'firmware-updates',
@@ -1300,6 +1316,30 @@
                     'Восстановление предыдущих версий'
                 ],
                 accessibleTo: ['prosthesis-user', 'system-developer']
+            },
+
+            'accelerometer': {
+                id: 'accelerometer',
+                name: 'Акселерометр',
+                description: 'Датчик положения протеза в пространстве. Данные используются для принятия решения о передаче распознанного жеста на микроконтроллер.',
+                icon: '📐',
+                type: 'component',
+                parent: 'sbc-container',
+                features: [
+                    'Измерение ускорения и ориентации протеза',
+                    'Определение статического положения (например, рука опущена/поднята)',
+                    'Фильтрация и预处理 данных',
+                    'Влияние на решение о передаче жеста (например, блокировка передачи при определённых положениях)'
+                ],
+                details: {
+                    subcomponents: [
+                        'Драйвер акселерометра (I2C/SPI)',
+                        'Алгоритмы фильтрации (комплементарный фильтр, фильтр Калмана)',
+                        'Логика принятия решения о передаче жеста'
+                    ],
+                    technologies: 'Акселерометр (например, MPU6050), I2C/SPI, цифровая обработка сигналов'
+                },
+                accessibleTo: ['system-developer']
             },
 
             // COMPONENTS for Mobile App Container
@@ -1337,7 +1377,7 @@
 
             'gesture-management-ui': {
                 id: 'gesture-management-ui',
-                name: 'Управление жестами (UI)',
+                name: 'Управление жестами',
                 description: 'Пользовательский интерфейс для создания и управления жестами',
                 icon: '🖐️',
                 type: 'component',
@@ -1353,7 +1393,7 @@
 
             'firmware-management-ui': {
                 id: 'firmware-management-ui',
-                name: 'Управление прошивками (UI)',
+                name: 'Управление прошивками',
                 description: 'Интерфейс для управления обновлениями прошивки и ПО',
                 icon: '📲',
                 type: 'component',
@@ -1364,6 +1404,54 @@
                     'История обновлений',
                     'Резервное копирование настроек'
                 ],
+                accessibleTo: ['prosthesis-user', 'system-developer']
+            },
+
+            'bluetooth-connection': {
+                id: 'bluetooth-connection',
+                name: 'Bluetooth соединение',
+                description: 'Модуль управления Bluetooth-подключением и протоколом обмена данными между протезом и мобильным приложением',
+                icon: '📡',
+                type: 'component',
+                parent: 'mobile-app-container',
+                features: [
+                    'Установка и поддержание защищённого соединения',
+                    'Обнаружение и сопряжение с протезом',
+                    'Протокол обмена командами и телеметрией',
+                    'Управление множественными подключениями'
+                ],
+                details: {
+                    subcomponents: [
+                        'Стек Bluetooth (BLE/Classic)',
+                        'Менеджер подключений',
+                        'Протокол прикладного уровня (команды/статусы)',
+                        'Шифрование и аутентификация'
+                    ],
+                    technologies: 'Bluetooth GATT, пользовательский сервис и характеристики'
+                },
+                accessibleTo: ['prosthesis-user', 'system-developer']
+            },
+
+            'mode-selector': {
+                id: 'mode-selector',
+                name: 'Выбор режима работы',
+                description: 'Компонент для переключения между режимами ИИ-распознавания жестов и ручного управления через два ЭМГ-датчика (dualEMG)',
+                icon: '🔄',
+                type: 'component',
+                parent: 'mobile-app-container',
+                features: [
+                    'Переключение между режимами "ИИ" и "dualEMG"',
+                    'В режиме ИИ — классификация жестов нейросетью',
+                    'В режиме dualEMG — выбор активного жеста в приложении, переключение жестов кнопкой или из приложения, активация двумя датчиками EMG'
+                ],
+                details: {
+                    subcomponents: [
+                        'Переключатель режимов (UI)',
+                        'Интерфейс выбора жеста для режима dualEMG',
+                        'Логика обработки EMG-сигналов для dualEMG'
+                    ],
+                    technologies: 'Логика переключения, UI-элементы'
+                },
                 accessibleTo: ['prosthesis-user', 'system-developer']
             },
 
@@ -1465,7 +1553,298 @@
                         tags: ['Протоколы', 'Связь', 'Сеть']
                     }
                 ]
-            }
+            },
+
+            // Аппаратная панель управления (кнопка и индикаторы)
+            'physical-controls': {
+                id: 'physical-controls',
+                name: 'Аппаратная панель управления',
+                description: 'Физический интерфейс с кнопкой управления и светодиодными индикаторами состояния',
+                icon: '🕹',
+                type: 'container',
+                parent: 'ai-prosthetic-arm',
+                children: ['control-button', 'battery-indicator', 'bluetooth-indicator'],
+                accessibleTo: ['prosthesis-user', 'system-developer']
+            },
+
+            // Плата управления моторами (MCU)
+            'motor-control-unit': {
+                id: 'motor-control-unit',
+                name: 'Плата управления моторами (MCU)',
+                description: 'Микроконтроллер (STM32) для непосредственного управления моторами, считывания датчиков силы/тока, обработки кнопок/индикаторов и связи по Bluetooth',
+                icon: '⚙️',
+                type: 'container',
+                parent: 'ai-prosthetic-arm',
+                children: [
+                    'gesture-firmware',
+                    'developer-interface',
+                    'gesture-addition',
+                    'sensor-processing',
+                    'physical-io',
+                    'bluetooth-mcu',
+                    'mode-selection-logic',
+                    'battery-status'
+                ],
+                accessibleTo: ['system-developer']   // доступен только разработчику
+            },
+
+            // Компоненты платы управления
+            'gesture-firmware': {
+                id: 'gesture-firmware',
+                name: 'Прошивка управления жестами',
+                description: 'Заранее прописанные положения и алгоритмы приведения в движение моторов для выполнения жестов',
+                icon: '📟',
+                type: 'component',
+                parent: 'motor-control-unit',
+                features: [
+                    'Исполнение команд жестов от SBC или мобильного приложения',
+                    'Хранение библиотеки жестов во flash-памяти',
+                    'Плавное управление сервоприводами'
+                ],
+                details: {
+                    subcomponents: [
+                        'Интерпретатор команд жестов',
+                        'Библиотека предустановленных жестов',
+                        'Алгоритмы интерполяции движений'
+                    ],
+                    technologies: 'C/C++, FreeRTOS, аппаратные таймеры'
+                },
+                accessibleTo: ['system-developer']
+            },
+
+            'developer-interface': {
+                id: 'developer-interface',
+                name: 'Интерфейс разработчика',
+                description: 'Инструмент для настройки параметров моторов и датчиков, просмотра логов и отладки',
+                icon: '🛠️',
+                type: 'component',
+                parent: 'motor-control-unit',
+                features: [
+                    'Настройка PID-регуляторов моторов',
+                    'Калибровка датчиков силы и тока',
+                    'Просмотр логов в реальном времени',
+                    'Диагностика ошибок'
+                ],
+                details: {
+                    subcomponents: [
+                        'Конфигуратор параметров',
+                        'Логгер событий',
+                        'Мониторинг состояния'
+                    ],
+                    technologies: 'UART/USB интерфейс, CLI'
+                },
+                accessibleTo: ['system-developer']
+            },
+
+            'gesture-addition': {
+                id: 'gesture-addition',
+                name: 'Добавление новых жестов',
+                description: 'Механизм создания и загрузки новых жестов через мобильное приложение или интерфейс разработчика',
+                icon: '➕',
+                type: 'component',
+                parent: 'motor-control-unit',
+                features: [
+                    'Приём новых жестов по Bluetooth',
+                    'Сохранение жестов в энергонезависимой памяти',
+                    'Валидация и проверка корректности жестов'
+                ],
+                details: {
+                    subcomponents: [
+                        'Загрузчик жестов',
+                        'Менеджер памяти жестов',
+                        'Валидатор формата жестов'
+                    ],
+                    technologies: 'Протокол передачи данных, flash-память'
+                },
+                accessibleTo: ['system-developer']
+            },
+
+            'sensor-processing': {
+                id: 'sensor-processing',
+                name: 'Обработка датчиков силы и тока',
+                description: 'Сбор и обработка данных с датчиков силы в пальцах и датчиков тока на каждом моторе',
+                icon: '📊',
+                type: 'component',
+                parent: 'motor-control-unit',
+                features: [
+                    'Измерение усилия захвата',
+                    'Мониторинг тока потребления моторов',
+                    'Обнаружение перегрузок и аварийное отключение',
+                    'Передача данных в SBC и мобильное приложение'
+                ],
+                details: {
+                    subcomponents: [
+                        'Драйверы АЦП',
+                        'Алгоритмы фильтрации сигналов',
+                        'Детектор перегрузок'
+                    ],
+                    technologies: 'АЦП, аналоговая обработка, SPI/I2C'
+                },
+                accessibleTo: ['system-developer']
+            },
+
+            'physical-io': {
+                id: 'physical-io',
+                name: 'Обработка кнопок и индикаторов',
+                description: 'Взаимодействие с физической кнопкой и светодиодными индикаторами',
+                icon: '🎛️',
+                type: 'component',
+                parent: 'motor-control-unit',
+                features: [
+                    'Детекция и обработка нажатий кнопки (долгое/короткое/двойное)',
+                    'Управление светодиодами (индикация заряда, Bluetooth)',
+                    'Передача событий кнопки в SBC и мобильное приложение'
+                ],
+                details: {
+                    subcomponents: [
+                        'Драйвер кнопки с устранением дребезга',
+                        'ШИМ-контроллер для RGB-светодиодов',
+                        'Логика состояний индикации'
+                    ],
+                    technologies: 'GPIO, прерывания, ШИМ'
+                },
+                accessibleTo: ['system-developer']
+            },
+
+            'bluetooth-mcu': {
+                id: 'bluetooth-mcu',
+                name: 'Bluetooth-модуль (MCU)',
+                description: 'Аппаратно-программный модуль Bluetooth для связи с мобильным приложением',
+                icon: '📶',
+                type: 'component',
+                parent: 'motor-control-unit',
+                features: [
+                    'Поддержка BLE/Classic Bluetooth',
+                    'Приём команд (переключение режимов, выбор жестов)',
+                    'Отправка телеметрии (уровень заряда, состояние датчиков)'
+                ],
+                details: {
+                    subcomponents: [
+                        'Стек Bluetooth',
+                        'Менеджер соединений',
+                        'Протокол прикладного уровня'
+                    ],
+                    technologies: 'Bluetooth-чип (например, nRF52), UART-интерфейс'
+                },
+                accessibleTo: ['system-developer']
+            },
+
+            'mode-selection-logic': {
+                id: 'mode-selection-logic',
+                name: 'Логика выбора режима',
+                description: 'Обработка команды выбора режима работы (AI / dualEMG) и соответствующее переключение алгоритмов',
+                icon: '🔄',
+                type: 'component',
+                parent: 'motor-control-unit',
+                features: [
+                    'Получение команды выбора режима от мобильного приложения или кнопки',
+                    'Переключение между ИИ-распознаванием и ручным управлением двумя EMG',
+                    'Уведомление SBC о текущем режиме'
+                ],
+                details: {
+                    subcomponents: [
+                        'Интерпретатор команд режима',
+                        'Маршрутизация данных в зависимости от режима'
+                    ],
+                    technologies: 'Логика состояний'
+                },
+                accessibleTo: ['system-developer']
+            },
+
+            'battery-status': {
+                id: 'battery-status',
+                name: 'Обработка статуса заряда',
+                description: 'Мониторинг напряжения батареи, расчёт уровня заряда и управление индикацией',
+                icon: '🔋',
+                type: 'component',
+                parent: 'motor-control-unit',
+                features: [
+                    'Измерение напряжения батареи через АЦП',
+                    'Расчёт процента заряда',
+                    'Передача данных об уровне заряда в SBC и мобильное приложение',
+                    'Управление индикатором заряда'
+                ],
+                details: {
+                    subcomponents: [
+                        'Драйвер АЦП для измерения напряжения',
+                        'Алгоритм оценки заряда',
+                        'Логика цветовой индикации'
+                    ],
+                    technologies: 'АЦП, делитель напряжения'
+                },
+                accessibleTo: ['system-developer']
+            },
+
+            // Компоненты панели
+            'control-button': {
+                id: 'control-button',
+                name: 'Многофункциональная кнопка',
+                description: 'Физическая кнопка с поддержкой различных типов нажатий для управления протезом',
+                icon: '🔘',
+                type: 'component',
+                parent: 'physical-controls',
+                features: [
+                    'Долгое нажатие (3 сек) — включение/выключение протеза',
+                    'Одиночное быстрое нажатие — фиксация текущего активного жеста (до следующего быстрого нажатия)',
+                    'Двойное быстрое нажатие — активация специального жеста из списка',
+                    'Тактильная обратная связь при нажатии'
+                ],
+                details: {
+                    subcomponents: [
+                        'Детектор типов нажатий (аппаратный или программный debounce)',
+                        'Схема обработки прерываний',
+                        'Интеграция с системой управления питанием'
+                    ],
+                    technologies: 'Механическая кнопка с защитой от дребезга, GPIO прерывания'
+                },
+                accessibleTo: ['prosthesis-user', 'system-developer']
+            },
+
+            'battery-indicator': {
+                id: 'battery-indicator',
+                name: 'Индикатор заряда батареи',
+                description: 'Светодиодный индикатор, отображающий уровень заряда аккумулятора протеза',
+                icon: '🔋',
+                type: 'component',
+                parent: 'physical-controls',
+                features: [
+                    'Цветовая индикация уровня заряда: зелёный (>50%), жёлтый (20–50%), красный (<20%)',
+                    'Мигание красным при критическом уровне заряда',
+                    'Отображение состояния зарядки'
+                ],
+                details: {
+                    subcomponents: [
+                        'Драйвер светодиода (RGB LED)',
+                        'Монитор напряжения батареи',
+                        'Логика цветового кодирования'
+                    ],
+                    technologies: 'RGB светодиод, ШИМ-управление, АЦП для измерения напряжения'
+                },
+                accessibleTo: ['prosthesis-user', 'system-developer']
+            },
+
+            'bluetooth-indicator': {
+                id: 'bluetooth-indicator',
+                name: 'Индикатор Bluetooth',
+                description: 'Светодиодный индикатор состояния Bluetooth-соединения',
+                icon: '📶',
+                type: 'component',
+                parent: 'physical-controls',
+                features: [
+                    'Синий постоянный — соединение активно',
+                    'Синий мигающий — режим сопряжения/поиск устройства',
+                    'Выключен — нет соединения или протез выключен'
+                ],
+                details: {
+                    subcomponents: [
+                        'Драйвер светодиода',
+                        'Интеграция с модулем Bluetooth',
+                        'Логика состояний соединения'
+                    ],
+                    technologies: 'Светодиод, управление через GPIO или I2C'
+                },
+                accessibleTo: ['prosthesis-user', 'system-developer']
+            },
         };
 
         // Application State
@@ -1960,14 +2339,15 @@
                 layersContainer.appendChild(layerElement);
             }
 
-            // Update all layers visibility
+            // Скрыть все слои
             document.querySelectorAll('.layer').forEach(el => {
                 el.classList.remove('active');
-                el.classList.add('hidden');
+                // если используете класс hidden, можно его добавить, но мы теперь полагаемся на display
+                el.style.display = 'none'; // или использовать класс
             });
 
-            // Show current layer
-            layerElement.classList.remove('hidden');
+            // Показать текущий слой
+            layerElement.style.display = 'block'; // или layerElement.classList.add('active')
             setTimeout(() => {
                 layerElement.classList.add('active');
             }, 10);
@@ -2074,9 +2454,9 @@
                 case 'clinical-specialist':
                     return 'Клинический специалист имеет доступ только к подсистеме TrainTransfer Program для калибровки и настройки протеза. Доступные компоненты: модуль визуализации, AI-система оптимизации каналов, модуль взаимодействия с БД и модуль экспорта конфигурации.';
                 case 'prosthesis-user':
-                    return 'Пользователь протеза имеет доступ только к подсистеме AI Prosthetic Arm для управления и настройки протеза. Доступные функции: настройка AI-модели, калибровка, управление моторами, настройка жестов, обновление прошивок.';
+                    return 'Пользователь протеза имеет доступ к подсистеме AI Prosthetic Arm. Доступные функции: настройка AI-модели, калибровка, управление моторами, настройка жестов, обновление прошивок, аппаратная панель управления (кнопка и индикаторы), а также управление режимами и Bluetooth через мобильное приложение.';
                 case 'system-developer':
-                    return 'Разработчик системы имеет полный доступ ко всей архитектуре, включая обе подсистемы и все их компоненты.';
+                    return 'Разработчик системы имеет полный доступ ко всей архитектуре, включая обе подсистемы, все их контейнеры (SBC, мобильное приложение, аппаратную панель, плату управления моторами) и компоненты.';
                 default:
                     return '';
             }
@@ -2377,6 +2757,44 @@
                 !e.target.closest('.node-content[data-type="component"]')) {
                 closeDetails();
             }
+        });
+    </script>
+    <script>
+        // Авторизация
+        document.addEventListener('DOMContentLoaded', function() {
+            const correctPassword = 'hangzhou2026'; 
+            const loginOverlay = document.getElementById('loginOverlay');
+            const appContainer = document.getElementById('appContainer');
+            const passwordInput = document.getElementById('passwordInput');
+            const loginBtn = document.getElementById('loginBtn');
+            const loginError = document.getElementById('loginError');
+
+            // Проверяем, не залогинились ли уже в этой сессии
+            if (sessionStorage.getItem('auth') === 'true') {
+                loginOverlay.style.display = 'none';
+                appContainer.style.display = 'block';
+            } else {
+                loginOverlay.style.display = 'flex';
+                appContainer.style.display = 'none';
+            }
+
+            loginBtn.addEventListener('click', function() {
+                if (passwordInput.value === correctPassword) {
+                    sessionStorage.setItem('auth', 'true');
+                    loginOverlay.style.display = 'none';
+                    appContainer.style.display = 'block';
+                } else {
+                    loginError.style.display = 'block';
+                    passwordInput.value = '';
+                }
+            });
+
+            // Обработка нажатия Enter в поле пароля
+            passwordInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    loginBtn.click();
+                }
+            });
         });
     </script>
 </body>
